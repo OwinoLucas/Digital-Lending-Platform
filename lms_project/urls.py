@@ -56,7 +56,7 @@ schema_view = get_schema_view(
         * 397178638 - Rejected customer
         """,
         terms_of_service="https://www.google.com/policies/terms/",
-        contact=openapi.Contact(email="contact@example.com"),
+        contact=openapi.Contact(email="lucasowino14@gmail.com"),
         license=openapi.License(name="BSD License"),
     ),
     public=True,
