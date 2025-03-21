@@ -96,3 +96,9 @@ xdg==5
 xkit==0.0.0
 xlrd==2.0.1
 yt-dlp==2024.4.9
+python-dotenv==1.0.1
+django==5.1.7
+djangorestframework==3.14.0
+drf-yasg==1.21.7
+mysqlclient==2.2.0
+zeep==4.2.1

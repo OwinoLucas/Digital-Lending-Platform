@@ -8,6 +8,7 @@ A Django-based Loan Management System (LMS) that integrates with a Core Banking 
 - [Setup and Installation](#setup-and-installation)
 - [API Documentation](#api-documentation)
 - [Test Data](#test-data)
+- [Environment Setup](#environment-setup)
 - [Integration Details](#integration-details)
 - [Development](#development)
 - [Error Handling](#error-handling)
@@ -76,7 +77,19 @@ source venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 ```
 
-4. **Setup MySQL Database**
+4. **Environment Configuration**
+```bash
+# Copy the example .env file and modify as needed
+cp .env.example .env
+
+# For development mode (uses mock services)
+# Set DJANGO_ENV=development in .env
+
+# For production mode (uses real external services)
+# Set DJANGO_ENV=production in .env or remove the line
+```
+
+5. **Setup MySQL Database**
 ```bash
 mysql -u root -p
 CREATE DATABASE lms_db;
@@ -85,19 +98,23 @@ GRANT ALL PRIVILEGES ON lms_db.* TO '<USERNAME>'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-5. **Run Migrations**
+6. **Run Migrations**
+```bash
+python manage.py makemigrations
+```
+then
 ```bash
 python manage.py migrate
 ```
 
-6. **Create Admin User**
+7. **Create Admin User**
 ```bash
 python manage.py createsuperuser
 Username: admin
 Password: pwd123
 ```
 
-7. **Run the Server**
+8. **Run the Server**
 ```bash
 python manage.py runserver
 ```
@@ -177,6 +194,29 @@ TEST_CUSTOMERS = [
     "397178638"   # Rejected customer
 ]
 ```
+
+## Environment Setup
+
+This application supports both development and production environments through environment variables.
+
+### Environment Configuration
+The application uses a `.env` file to configure environment variables. See the `ENVIRONMENT_GUIDE.md` for detailed information.
+
+### Development vs Production Mode
+You can set the mode using the `DJANGO_ENV` environment variable:
+
+```bash
+# Development Mode (uses mock services)
+export DJANGO_ENV=development
+python manage.py runserver
+
+# Production Mode (connects to external APIs)
+export DJANGO_ENV=production  # or don't set it (defaults to production)
+python manage.py runserver
+```
+
+### Automatic Fallback
+The system includes an automatic fallback mechanism that switches to mock services if external APIs are unreachable. This ensures the application can run even when offline or when external services are down. See `ENVIRONMENT_GUIDE.md` for details.
 
 ## Integration Details
 

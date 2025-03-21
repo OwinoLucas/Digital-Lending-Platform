@@ -2,6 +2,10 @@ from django.conf import settings
 from zeep import Client
 from zeep.transports import Transport
 from requests import Session
+import logging
+from requests.exceptions import ConnectionError, Timeout
+
+logger = logging.getLogger(__name__)
 
 class CBSService:
     """
@@ -11,18 +15,27 @@ class CBSService:
     def __init__(self):
         self.use_local = getattr(settings, 'USE_LOCAL_CBS', True)  # Default to local mode
         if not self.use_local:
-            session = Session()
-            session.verify = False
-            transport = Transport(session=session)
-            
-            self.kyc_client = Client(
-                settings.CBS_KYC_WSDL_URL,
-                transport=transport
-            )
-            self.transaction_client = Client(
-                settings.CBS_TRANSACTION_WSDL_URL,
-                transport=transport
-            )
+            try:
+                session = Session()
+                session.verify = False
+                transport = Transport(session=session)
+                
+                self.kyc_client = Client(
+                    settings.CBS_KYC_WSDL_URL,
+                    transport=transport
+                )
+                self.transaction_client = Client(
+                    settings.CBS_TRANSACTION_WSDL_URL,
+                    transport=transport
+                )
+            except (ConnectionError, Timeout) as e:
+                logger.error(f"Failed to connect to CBS services: {str(e)}")
+                logger.warning("Falling back to local development mode")
+                self.use_local = True
+            except Exception as e:
+                logger.error(f"Error initializing CBS clients: {str(e)}")
+                logger.warning("Falling back to local development mode")
+                self.use_local = True
 
     def get_customer_info(self, customer_number):
         """
@@ -35,12 +48,21 @@ class CBSService:
             Exception: If CBS call fails
         """
         if self.use_local:
+            logger.info(f"Using mock CBS service for customer info: {customer_number}")
             return self._get_mock_customer_info(customer_number)
         
         try:
             return self.kyc_client.service.getCustomerInfo(customer_number)
+        except (ConnectionError, Timeout) as e:
+            logger.error(f"Network error connecting to CBS KYC service: {str(e)}")
+            logger.warning("Falling back to local development mode")
+            self.use_local = True
+            return self._get_mock_customer_info(customer_number)
         except Exception as e:
-            raise Exception(f"Error fetching customer info: {str(e)}")
+            logger.error(f"Error fetching customer info: {str(e)}")
+            logger.warning("Falling back to local development mode")
+            self.use_local = True
+            return self._get_mock_customer_info(customer_number)
 
     def get_transaction_history(self, customer_number):
         """
@@ -53,12 +75,21 @@ class CBSService:
             Exception: If CBS call fails
         """
         if self.use_local:
+            logger.info(f"Using mock CBS service for transaction history: {customer_number}")
             return self._get_mock_transaction_history(customer_number)
             
         try:
             return self.transaction_client.service.getTransactionHistory(customer_number)
+        except (ConnectionError, Timeout) as e:
+            logger.error(f"Network error connecting to CBS Transaction service: {str(e)}")
+            logger.warning("Falling back to local development mode")
+            self.use_local = True
+            return self._get_mock_transaction_history(customer_number)
         except Exception as e:
-            raise Exception(f"Error fetching transaction history: {str(e)}")
+            logger.error(f"Error fetching transaction history: {str(e)}")
+            logger.warning("Falling back to local development mode")
+            self.use_local = True
+            return self._get_mock_transaction_history(customer_number)
 
     def _get_mock_customer_info(self, customer_number):
         """Mock customer info for local development"""

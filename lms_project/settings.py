@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^5u4iw9mplct13!(4dh5y+42(2gk1xw5x3ab80sgn_i^!9s1im'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-^5u4iw9mplct13!(4dh5y+42(2gk1xw5x3ab80sgn_i^!9s1im')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = []
 
@@ -78,12 +83,12 @@ WSGI_APPLICATION = 'lms_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'lms_db',
-        'USER': 'donut',
-        'PASSWORD': 'ithurtswhenIP',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.mysql'),
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': os.environ.get('DB_PORT'),
     }
 }
 
@@ -131,19 +136,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Scoring Engine settings
-USE_LOCAL_SCORING = True  # Set to False for external scoring engine
-SCORING_ENGINE_BASE_URL = 'https://scoringtest.credable.io' if not USE_LOCAL_SCORING else 'http://localhost:8000'
-MAX_SCORING_RETRIES = 3
-SCORING_RETRY_DELAY = 300  # 5 minutes in seconds
+# Check if we're in development mode
+# Set DJANGO_ENV=development in your local environment
+# In production, this will default to 'production'
+ENVIRONMENT = os.environ.get('DJANGO_ENV', 'production')
+IS_DEVELOPMENT = ENVIRONMENT == 'development'
+
+# Use local services in development, external in production
+USE_LOCAL_SCORING = IS_DEVELOPMENT
+USE_LOCAL_CBS = IS_DEVELOPMENT
+
+# Configure URLs based on environment
+SCORING_ENGINE_BASE_URL = 'http://localhost:8000' if USE_LOCAL_SCORING else os.environ.get('SCORING_ENGINE_BASE_URL', 'https://scoringtest.credable.io')
+MAX_SCORING_RETRIES = int(os.environ.get('MAX_SCORING_RETRIES', 3))
+SCORING_RETRY_DELAY = int(os.environ.get('SCORING_RETRY_DELAY', 300))  # 5 minutes in seconds
 
 # CBS Settings
-CBS_KYC_WSDL_URL = 'https://kycapitest.credable.io/service/customerWsdl.wsdl'
-CBS_TRANSACTION_WSDL_URL = 'https://trxapitest.credable.io/service/transactionWsdl.wsdl'
-CBS_USERNAME = 'admin'
-CBS_PASSWORD = 'pwd123'
-
-# Add these settings
-USE_LOCAL_CBS = True  # Set to False for external CBS 
+CBS_KYC_WSDL_URL = os.environ.get('CBS_KYC_WSDL_URL', 'https://kycapitest.credable.io/service/customerWsdl.wsdl')
+CBS_TRANSACTION_WSDL_URL = os.environ.get('CBS_TRANSACTION_WSDL_URL', 'https://trxapitest.credable.io/service/transactionWsdl.wsdl')
+CBS_USERNAME = os.environ.get('CBS_USERNAME', 'admin')
+CBS_PASSWORD = os.environ.get('CBS_PASSWORD', 'pwd123')
 
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
@@ -151,11 +163,16 @@ SWAGGER_SETTINGS = {
             'type': 'basic'
         }
     },
+    'TAGS_SORTER': 'alpha',
     'USE_SESSION_AUTH': False,
-    'OPERATIONS_SORTER': 'method',
     'JSON_EDITOR': True,
-    'SUPPORTED_SUBMIT_METHODS': [
-        'get',
-        'post',
-    ],
+    'OPERATIONS_SORTER': 'alpha',
+    'SUPPORTED_SUBMIT_METHODS': ['get', 'post'],
+    'TAGS': [
+        {'name': '1. Client Registration', 'description': 'Initial setup endpoints'},
+        {'name': '2. Customer Subscription', 'description': 'Customer onboarding'},
+        {'name': '3. Scoring', 'description': 'Credit scoring process'},
+        {'name': '4. Loan Management', 'description': 'Loan application and status'},
+        {'name': '5. Transactions', 'description': 'Transaction data retrieval'},
+    ]
 } 

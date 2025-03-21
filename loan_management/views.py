@@ -13,9 +13,17 @@ from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+# Define tags for grouping endpoints
+client_tag = ['1. Client Registration']
+subscription_tag = ['2. Customer Subscription']
+scoring_tag = ['3. Scoring']
+loan_tag = ['4. Loan Management']
+transaction_tag = ['5. Transactions']
+
 class LoanManagementViewSet(viewsets.ViewSet):
 
     @swagger_auto_schema(
+        tags=client_tag,
         operation_summary="Register Client",
         operation_description="""
         Register this service with the scoring engine.
@@ -95,6 +103,7 @@ class LoanManagementViewSet(viewsets.ViewSet):
             )
 
     @swagger_auto_schema(
+        tags=subscription_tag,
         operation_summary="Subscribe Customer",
         operation_description="""
         Subscribe a customer to the lending service.
@@ -150,7 +159,47 @@ class LoanManagementViewSet(viewsets.ViewSet):
         })
 
     @swagger_auto_schema(
-        operation_summary="Request Loan",
+        tags=scoring_tag,
+        operation_summary="Step 3a: Initiate Score Query",
+        operation_description="Start the scoring process for a customer"
+    )
+    def initiate_query_score(self, request, customer_number):
+        """
+        Step 1: Initiate scoring process for a customer
+        """
+        try:
+            scoring_service = ScoringService()
+            result = scoring_service.initiate_scoring(customer_number)
+            return Response({"token": result['token']})
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @swagger_auto_schema(
+        tags=scoring_tag,
+        operation_summary="Step 3b: Get Score Results",
+        operation_description="Get the results of the scoring process"
+    )
+    def query_score(self, request, token):
+        """
+        Step 2: Get scoring results using token
+        """
+        try:
+            scoring_service = ScoringService()
+            result = scoring_service.get_score(token)
+            return Response(result)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @swagger_auto_schema(
+        tags=loan_tag,
+        operation_id='a_request_loan',
+        operation_summary="Step 4a: Request Loan",
         operation_description="""
         Submit a loan application.
         Checks for existing loans and initiates scoring process.
@@ -228,8 +277,10 @@ class LoanManagementViewSet(viewsets.ViewSet):
         })
 
     @swagger_auto_schema(
-        operation_summary="Check Loan Status",
-        operation_description="Get the current status of a loan application",
+        tags=loan_tag,
+        operation_id='b_check_loan_status',
+        operation_summary="Step 4b: Check Loan Status",
+        operation_description="Monitor the status of a submitted loan application",
         manual_parameters=[
             openapi.Parameter(
                 'loan_id',
@@ -261,39 +312,12 @@ class LoanManagementViewSet(viewsets.ViewSet):
         serializer = LoanApplicationSerializer(loan_application)
         return Response(serializer.data)
 
-    def initiate_query_score(self, request, customer_number):
-        """
-        Step 1: Initiate scoring process for a customer
-        """
-        try:
-            scoring_service = ScoringService()
-            result = scoring_service.initiate_scoring(customer_number)
-            return Response({"token": result['token']})
-        except Exception as e:
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    def query_score(self, request, token):
-        """
-        Step 2: Get scoring results using token
-        """
-        try:
-            scoring_service = ScoringService()
-            result = scoring_service.get_score(token)
-            return Response(result)
-        except Exception as e:
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
 class TransactionDataViewSet(viewsets.ViewSet):
     authentication_classes = [BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
+        tags=transaction_tag,
         operation_summary="Get Transaction Data",
         operation_description="""
         Retrieve customer transaction history.

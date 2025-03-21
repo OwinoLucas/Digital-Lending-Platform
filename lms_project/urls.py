@@ -25,29 +25,38 @@ schema_view = get_schema_view(
         title="Digital Lending Platform API",
         default_version='v1',
         description="""
-        Digital Lending Platform API Documentation
-        
-        # Authentication
-        * Basic Auth for Transaction API endpoints
-        * No authentication required for other endpoints
-        
-        # Test Data
-        Use these customer numbers for testing:
+        # API Flow
+        Follow these steps in order:
+
+        1. **Client Registration**
+           * Register your service (one-time setup)
+           * Get client token for future requests
+
+        2. **Customer Subscription**
+           * Subscribe customer to lending service
+           * Verify customer exists in CBS
+
+        3. **Scoring Process**
+           * Initiate scoring query
+           * Get scoring results
+
+        4. **Loan Management**
+           * Submit loan request
+           * Check loan status
+
+        5. **Transaction Data**
+           * Retrieve customer transactions
+           * Requires Basic Auth
+
+        # Test Customer Numbers
         * 234774784 - Regular customer
         * 318411216 - High-value customer
         * 340397370 - New customer
         * 366585630 - Existing loan customer
         * 397178638 - Rejected customer
-        
-        # Flow
-        1. Register client (one-time setup)
-        2. Subscribe customer
-        3. Request loan
-        4. Check loan status
-        5. Get transaction data
         """,
         terms_of_service="https://www.google.com/policies/terms/",
-        contact=openapi.Contact(email="lucasowino14@gmail.com"),
+        contact=openapi.Contact(email="contact@example.com"),
         license=openapi.License(name="BSD License"),
     ),
     public=True,
