@@ -1,0 +1,36 @@
+The company is building a Digital Lending Platform that allows a bank to offer small loans to its customers via a mobile app (USSD, iOS, Android). The system integrates with:
+
+A Scoring Engine – Determines if a customer is eligible for a loan and how much they can borrow.
+The Bank's Core Banking System (CBS) – Provides customer details and transaction history.
+What I Need to Build
+I need to develop a Loan Management System (LMS) that:
+
+Connects to the Bank’s CBS to fetch customer info and transaction history.
+Connects to the Scoring Engine to get a customer’s credit score and loan limit.
+Exposes REST APIs for the mobile app to allow customers to:
+Subscribe to the lending service.
+Request a loan.
+Check their loan status.
+How It Works
+Customer Signs Up for the Loan Service
+
+The mobile app calls the Subscription API, providing the customer’s number.
+Customer Requests a Loan
+
+The mobile app calls the Loan Request API with the customer’s number and loan amount.
+the system checks if the customer has any active loans. If yes, they can’t apply again.
+Check Customer’s Loan Eligibility
+
+The LMS queries the Scoring Engine in two steps:
+Send customer number → Receive a token.
+Use token to get score & loan limit (This takes time, so I need a retry mechanism with a limit on attempts).
+If scoring fails after retries, the loan request is rejected, and the customer must reapply.
+Get Customer Data from the Bank
+
+Fetch customer details using the KYC API.
+Fetch transaction history using the Transactions Data API.
+Expose Data to the Scoring Engine
+
+The Scoring Engine needs transaction data to assess the customer’s risk.
+I need to create an API that the Scoring Engine can call to get this data.
+I must register the API endpoint with the Scoring Engine.

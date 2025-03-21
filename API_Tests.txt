@@ -1,0 +1,157 @@
+TEST WITH POSTMAN
+
+1. Environment Setup in Postman
+First, create an environment with these variables:
+
+BASE_URL: http://127.0.0.1:8000/api/v1
+CLIENT_TOKEN: [will be obtained from createClient]
+TEST_CUSTOMER: 234774784
+YOUR_SERVICE_NAME: "Your Digital Lending Platform"
+YOUR_USERNAME: "your_basic_auth_username"
+YOUR_PASSWORD: "your_basic_auth_password"
+YOUR_ENDPOINT: "http://your-api-endpoint.com/transactions"
+
+2. Collection Structure
+A. Client Registration
+
+POST {{BASE_URL}}/client/createClient
+Headers:
+  Content-Type: application/json
+
+Body:
+{
+    "url": "{{YOUR_ENDPOINT}}",
+    "name": "{{YOUR_SERVICE_NAME}}",
+    "username": "{{YOUR_USERNAME}}",
+    "password": "{{YOUR_PASSWORD}}"
+}
+
+Tests:
+pm.test("Client registration successful", function () {
+    pm.response.to.have.status(200);
+    var jsonData = pm.response.json();
+    pm.environment.set("CLIENT_TOKEN", jsonData.token);
+});
+
+B. Scoring Flow
+1. Initiate Query Score
+
+GET {{BASE_URL}}/scoring/initiateQueryScore/{{TEST_CUSTOMER}}
+Headers:
+  client-token: {{CLIENT_TOKEN}}
+
+Tests:
+pm.test("Score initiation successful", function () {
+    pm.response.to.have.status(200);
+    var jsonData = pm.response.json();
+    pm.environment.set("SCORING_TOKEN", jsonData.token);
+});
+
+2. Query Score
+
+GET {{BASE_URL}}/scoring/queryScore/{{SCORING_TOKEN}}
+Headers:
+  client-token: {{CLIENT_TOKEN}}
+
+Tests:
+pm.test("Score query successful", function () {
+    pm.response.to.have.status(200);
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property("score");
+    pm.expect(jsonData).to.have.property("limitAmount");
+});
+
+3. Test Cases for Different Customers
+- Create a collection runner with these test cases:
+
+[
+    {
+        "customerNumber": "234774784",
+        "description": "Regular customer"
+    },
+    {
+        "customerNumber": "318411216",
+        "description": "High-value customer"
+    },
+    {
+        "customerNumber": "340397370",
+        "description": "New customer"
+    },
+    {
+        "customerNumber": "366585630",
+        "description": "Existing loan customer"
+    },
+    {
+        "customerNumber": "397178638",
+        "description": "Rejected customer"
+    }
+]
+
+4. Transaction Data Endpoint Test
+Your endpoint should return data in the specified format:
+
+GET {{YOUR_ENDPOINT}}/transactions/{{customerNumber}}
+Headers:
+  Authorization: Basic {{BASE64_ENCODED_CREDENTIALS}}
+
+Tests:
+pm.test("Transaction data format valid", function () {
+    pm.response.to.have.status(200);
+    var jsonData = pm.response.json();
+    pm.expect(jsonData[0]).to.have.property("accountNumber");
+    pm.expect(jsonData[0]).to.have.property("monthlyBalance");
+    pm.expect(jsonData[0]).to.have.property("credittransactionsAmount");
+});
+
+5. Full Flow Test Script
+
+// Pre-request Script for Score Query
+let maxRetries = 3;
+let retryDelay = 5000; // 5 seconds
+
+function checkScore() {
+    if (pm.environment.get("SCORING_TOKEN")) {
+        let currentRetry = pm.variables.get("currentRetry") || 0;
+        
+        if (currentRetry < maxRetries) {
+            pm.variables.set("currentRetry", currentRetry + 1);
+            
+            setTimeout(() => {
+                pm.sendRequest({
+                    url: pm.environment.get("BASE_URL") + "/scoring/queryScore/" + 
+                         pm.environment.get("SCORING_TOKEN"),
+                    method: 'GET',
+                    header: {
+                        'client-token': pm.environment.get("CLIENT_TOKEN")
+                    }
+                }, function (err, res) {
+                    if (!err && res.json().score) {
+                        // Score is ready
+                        pm.environment.set("SCORE", res.json().score);
+                        pm.environment.set("LIMIT_AMOUNT", res.json().limitAmount);
+                    } else {
+                        // Retry
+                        checkScore();
+                    }
+                });
+            }, retryDelay);
+        }
+    }
+}
+
+6. CBS SOAP Integration Test
+
+POST {{CBS_SOAP_ENDPOINT}}
+Headers:
+  Content-Type: text/xml
+  Authorization: Basic YWRtaW46cHdkMTIz
+
+Body:
+<soap:Envelope>
+    <!-- SOAP request structure -->
+</soap:Envelope>
+
+Tests:
+pm.test("CBS connection successful", function () {
+    pm.response.to.have.status(200);
+});
