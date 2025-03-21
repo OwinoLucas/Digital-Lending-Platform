@@ -127,7 +127,7 @@ python manage.py test
 ```
 
 
-## API Documentation
+<!-- ## API Documentation
 
 ### Authentication
 All APIs require Bearer token authentication except where noted.
@@ -180,7 +180,7 @@ All APIs require Bearer token authentication except where noted.
 ### 4. Transaction Data API
 **Endpoint:** `GET /api/v1/transactions/<customer_number>/`
 **Purpose:** Retrieve customer transaction history
-**Authentication:** Basic Auth
+**Authentication:** Basic Auth -->
 
 ## Test Data
 
@@ -233,7 +233,7 @@ CBS_CONFIG = {
 ```
 
 ### Scoring Engine
-- **Base URL:** `https://scoringtest.credable.io`
+- **Base URL:** `https://scoringtest.credable.io` 
 - **Process:**
   1. Initialize scoring (returns token)
   2. Check score status (using token)

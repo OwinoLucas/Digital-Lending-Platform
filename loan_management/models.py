@@ -53,7 +53,6 @@ class LoanApplication(models.Model):
 
 class ScoringEngineConfig(models.Model):
     """
-    Stores configuration for the Scoring Engine integration.
     Maintains credentials and tokens needed for API communication.
     Only the latest configuration is used (get_latest_by).
     """

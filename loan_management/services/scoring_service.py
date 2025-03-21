@@ -23,7 +23,7 @@ class ScoringService:
 
     def register_endpoint(self, url, name, username, password):
         """
-        Registers endpoint - handles both local and external scoring engine
+        Registers endpoint
         """
         if self.use_local:
             return self._register_local(url, name, username, password)
