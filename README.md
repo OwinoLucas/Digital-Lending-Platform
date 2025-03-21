@@ -159,8 +159,8 @@ All APIs require Bearer token authentication except where noted.
 **Request:**
 ```json
 {
-    "customer_number": "234774784",
-    "amount": 5000
+"customer_number": "234774784",
+"amount": 5000
 }
 ```
 
@@ -255,12 +255,12 @@ CBS_CONFIG = {
 ### Loan Status Response
 ```json
 {
-    "id": "uuid",
-    "customer": "customer_id",
-    "amount": "decimal",
-    "status": "PENDING|PROCESSING|APPROVED|REJECTED|FAILED",
-    "created_at": "datetime",
-    "updated_at": "datetime"
+"id": "uuid",
+"customer": "customer_id",
+"amount": "decimal",
+"status": "PENDING|PROCESSING|APPROVED|REJECTED|FAILED",
+"created_at": "datetime",
+"updated_at": "datetime"
 }
 ```
 
